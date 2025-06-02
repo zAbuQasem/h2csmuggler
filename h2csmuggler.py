@@ -46,7 +46,12 @@ def establish_tcp_connection(proxy_url):
 
     retSock = sock
     if proxy_url.scheme == "https":
-        retSock = ssl.wrap_socket(sock, ssl_version=ssl.PROTOCOL_TLS)
+        context = ssl.create_default_context()
+        # Disable certificate verification to allow self-signed certificates
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        print("[WARNING] SSL certificate verification disabled - accepting self-signed certificates")
+        retSock = context.wrap_socket(sock, server_hostname=proxy_url.hostname)
 
     retSock.settimeout(MAX_TIMEOUT)
     retSock.connect(connect_args)

@@ -1,10 +1,20 @@
-FROM golang:1.14-alpine
+FROM golang:1.23-alpine
 
-RUN apk add --no-cache git
-WORKDIR /go/src/app
+RUN apk add --no-cache git ca-certificates
+
+WORKDIR /app
+
+# Initialize Go module if it doesn't exist
 COPY demo.go .
+RUN go mod init h2csmuggler || true
 
-RUN go get -d -v ./...
-RUN go install -v ./...
+# Download dependencies
+RUN go mod tidy
+RUN go get golang.org/x/net/http2
 
-CMD ["app"]
+# Build the application
+RUN go build -o h2csmuggler demo.go
+
+EXPOSE 80
+
+CMD ["./h2csmuggler"]
